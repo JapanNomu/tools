@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.pytest_cache/
+
+# venv
+venv/
+.venv/
+env/
+ENV/
+
+# Local data / runtime
+data/
+*.db
+*.lance/
+*.kuzu/
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Local env files
+.env
+.env.local
