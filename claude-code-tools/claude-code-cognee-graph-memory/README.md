@@ -1,6 +1,6 @@
 # Claude Code + Cognee Graph Memory System
 
-**Version**: 0.1.11
+**Version**: 0.1.12
 
 A module that adds graph-based memory to Claude Code. It accumulates work-related memory (rules, lessons learned, design decisions, incident records) across sessions, enabling retrieval in later sessions.
 
@@ -61,8 +61,8 @@ With the auto-accumulation harness in `harness/`, the more you use Claude Code, 
 | Use mode | GPU | RAM | LLM |
 |---------|-----|-----|-----|
 | **Cloud API (strongly recommended)** | Not required | 16GB+ | claude-sonnet-4-6 / gpt-4o, etc. |
-| Local LLM (recommended) | RTX 4070 12GB+ | 32GB+ | qwen2.5:32b or larger |
-| Local LLM (verified minimum) | RTX 4060 8GB | 32GB | qwen2.5:14b — works but response time is noticeably slower |
+| Local LLM (recommended) | GPU with **12GB+ VRAM** (note: laptop RTX 4070 has only 8GB and does NOT qualify; desktop RTX 4070 / 4070 SUPER / 4070 Ti / 4080 etc. do) | 32GB+ | qwen2.5:32b or larger |
+| Local LLM (verified minimum) | NVIDIA GeForce RTX 4060 Laptop GPU (VRAM 8GB) | 32GB | qwen2.5:14b — works but response time is noticeably slower |
 
 See `docs/GETTING_STARTED.md` "Recommended LLM and Environment" for details.
 

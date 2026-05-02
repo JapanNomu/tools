@@ -24,22 +24,22 @@ Local LLM operation avoids API billing, but its structured-output reliability is
 
 | Item | Cloud API mode | Local LLM mode |
 |------|---------------|---------------|
-| GPU | Not required | **RTX 4070 12GB or higher** recommended |
+| GPU | Not required | **GPU with 12GB+ VRAM** recommended (note: laptop RTX 4070 has only 8GB and does NOT qualify; desktop RTX 4070 / 4070 SUPER / 4070 Ti / 4080 etc. do) |
 | RAM | 16GB+ | **32GB+** |
 | LLM | claude-sonnet-4-6 / gpt-4o, etc. | **qwen2.5:32b or higher** (14B+ is the minimum) |
 
-Local LLM operation becomes practical with **GPU at RTX 4070 12GB or above**. With less (e.g. RTX 4060 8GB), 14B-class models can still run, but model weights spill out of GPU memory and partially offload to CPU, which makes **response time noticeably slower** (about 2-3x in our experience).
+Local LLM operation becomes practical with **a GPU that has 12GB+ VRAM**. With less VRAM (e.g. NVIDIA GeForce RTX 4060 Laptop GPU with 8GB VRAM), 14B-class models can still run, but model weights spill out of GPU memory and partially offload to CPU, which makes **response time noticeably slower** (about 2-3x in our experience).
 
 ### Verification Record (reference)
 
 This distribution's full feature set has been verified in the following environment:
 
-- Test environment: GPU **RTX 4060 8GB** / RAM 32GB
+- Test environment: GPU **NVIDIA GeForce RTX 4060 Laptop GPU (VRAM 8GB)** / RAM 32GB
 - Test LLM: **qwen2.5:14b** (num_ctx=8192)
 - Result: **20/20 success** (remember 5/5 ✅, search(CHUNKS) 5/5 ✅, search(GRAPH_COMPLETION) 5/5 ✅, recall 5/5 ✅, zero JSON Schema violations)
 - Caveat: With model weights at 9GB and only 8GB of GPU memory, part of the workload offloads to CPU and **response time is slow** (about 2-3x slower than gemma4:e4b 16K).
 
-In other words, the distribution **just barely runs all features on RTX 4060 8GB / qwen2.5:14b**, but for comfortable use we recommend meeting the "Recommended Environment" above.
+In other words, the distribution **just barely runs all features on an 8GB-VRAM laptop GPU (RTX 4060 Laptop GPU) with qwen2.5:14b**, but for comfortable use we recommend meeting the "Recommended Environment" above.
 
 ### Default Configuration
 
