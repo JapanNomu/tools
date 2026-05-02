@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.11] - 2026-05-02
+
+### Changed
+- Switched the recommended/default LLM to **qwen2.5:14b** (num_ctx=8192).
+  `config/.env.example` now ships with `LLM_MODEL=qwen2.5:14b` (was
+  `llama3.1:8b`), and Claude API / OpenAI API setup examples are included
+  as comments.
+- Added a "Recommended LLM and Environment" section to
+  `docs/GETTING_STARTED.md`.
+  - Cloud APIs (Claude / OpenAI) are **strongly recommended** (near-100%
+    reliability with official structured-output support).
+  - Local LLM operation requires GPU **RTX 4070 12GB or higher** with
+    **qwen2.5:32b or larger** (14B is the practical minimum).
+  - Verification record: GPU RTX 4060 8GB / RAM 32GB / qwen2.5:14b
+    (num_ctx=8192) achieved **20/20 feature success** (remember 5/5,
+    search(CHUNKS) 5/5, search(GRAPH_COMPLETION) 5/5, recall 5/5, zero
+    JSON Schema violations). Response time is slow due to partial CPU
+    offload.
+- Updated existing `llama3.1:8b`-specific text to reference `qwen2.5:14b`
+  and cloud APIs (sample-ingestion-failure fallback list, recall fallback
+  notice, troubleshooting section).
+
 ## [0.1.10] - 2026-05-02
 
 ### Changed

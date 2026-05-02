@@ -6,6 +6,47 @@ If you have not completed setup yet, please refer to `docs/SETUP.md` first.
 
 ---
 
+## Recommended LLM and Environment
+
+### Recommended LLM (strongly recommended)
+
+To use all features (especially `recall` and `search(GRAPH_COMPLETION)`) **reliably**, we strongly recommend using a **cloud LLM API** that handles Cognee's structured output requirements consistently.
+
+| Tier | LLM | Recommendation |
+|------|-----|------|
+| Cloud API (**strongly recommended**) | **Anthropic Claude API** (claude-sonnet-4-6, etc.) / **OpenAI API** (gpt-4o, etc.) | ★★★ Near-100% reliability with official structured-output support |
+| Local LLM (conditionally OK) | qwen2.5:14b / qwen2.5:32b / qwen2.5:72b / llama3.3:70b — 14B or larger | ★★ Acceptable if your GPU has enough memory |
+| Local LLM (**not recommended**) | llama3.1:8b / llama3.2:3b / gemma4:e4b | ★ Frequent JSON Schema violations in structured output |
+
+Local LLM operation avoids API billing, but its structured-output reliability is clearly inferior to cloud APIs. For production use or stable operation, choose a cloud API.
+
+### Recommended Environment
+
+| Item | Cloud API mode | Local LLM mode |
+|------|---------------|---------------|
+| GPU | Not required | **RTX 4070 12GB or higher** recommended |
+| RAM | 16GB+ | **32GB+** |
+| LLM | claude-sonnet-4-6 / gpt-4o, etc. | **qwen2.5:32b or higher** (14B+ is the minimum) |
+
+Local LLM operation becomes practical with **GPU at RTX 4070 12GB or above**. With less (e.g. RTX 4060 8GB), 14B-class models can still run, but model weights spill out of GPU memory and partially offload to CPU, which makes **response time noticeably slower** (about 2-3x in our experience).
+
+### Verification Record (reference)
+
+This distribution's full feature set has been verified in the following environment:
+
+- Test environment: GPU **RTX 4060 8GB** / RAM 32GB
+- Test LLM: **qwen2.5:14b** (num_ctx=8192)
+- Result: **20/20 success** (remember 5/5 ✅, search(CHUNKS) 5/5 ✅, search(GRAPH_COMPLETION) 5/5 ✅, recall 5/5 ✅, zero JSON Schema violations)
+- Caveat: With model weights at 9GB and only 8GB of GPU memory, part of the workload offloads to CPU and **response time is slow** (about 2-3x slower than gemma4:e4b 16K).
+
+In other words, the distribution **just barely runs all features on RTX 4060 8GB / qwen2.5:14b**, but for comfortable use we recommend meeting the "Recommended Environment" above.
+
+### Default Configuration
+
+The default `config/.env.example` ships with **qwen2.5:14b** (num_ctx=8192). If you want to use a cloud API, edit `LLM_PROVIDER` / `LLM_MODEL` / `LLM_API_KEY` / `LLM_ENDPOINT` (see `docs/SETUP.md` for details).
+
+---
+
 ## Step 1: Verify operation with bundled samples
 
 Run the following in your terminal.
@@ -27,7 +68,7 @@ Time estimate: 2-5 minutes (includes Ollama graph processing).
 
 ### If sample ingestion fails
 
-The LLM (`llama3.1:8b`) sometimes returns unstable responses that cause structured-output validation errors. After 5 retries the script may abort with errors such as `InstructorRetryException` or `Field required`. If this happens, clean up and retry:
+When running on a local LLM, the model sometimes returns unstable responses that cause structured-output validation errors. After 5 retries the script may abort with errors such as `InstructorRetryException` or `Field required`. If this happens, clean up and retry:
 
 ```bash
 # Remove any partially-ingested sample data
@@ -37,7 +78,7 @@ src/venv/bin/python3 src/sample_src/delete_sample.py
 src/venv/bin/python3 src/sample_src/load_sample.py
 ```
 
-If the failure persists, check that Ollama is reachable (`ollama list` should show the model), or try a larger model (e.g. `llama3.1:70b`) by changing `LLM_MODEL` in `config/.env`.
+If the failure persists, check that Ollama is reachable (`ollama list` should show the model), try a larger local LLM (e.g. `qwen2.5:32b` / `qwen2.5:72b` / `llama3.3:70b`) by changing `LLM_MODEL` in `config/.env`, or **switch to a cloud API (Claude / OpenAI)** — this error rarely happens with cloud APIs.
 
 ---
 
@@ -63,7 +104,7 @@ Or in natural language:
 recall("When can I run git push?")
 ```
 
-> ⚠️ With llama3.1:8b, `recall` may fail with an "LLM format error". If it fails, use `search(query, search_type="CHUNKS")` as a fallback (see Troubleshooting at the bottom of this file).
+> ⚠️ With local LLMs (especially models 8B and below), `recall` may fail with an "LLM format error". If it fails, use `search(query, search_type="CHUNKS")` as a fallback (see Troubleshooting at the bottom of this file). Cloud APIs and qwen2.5:14b or larger handle `recall` reliably.
 
 **Expected response:**
 
@@ -79,7 +120,7 @@ search("How to handle errors when Ollama is unreachable", search_type="CHUNKS")
 
 **Expected response:**
 
-> "Run `ollama serve` and retry. Also check whether `llama3.1:8b` is downloaded with `ollama list`."
+> "Run `ollama serve` and retry. Also check whether the configured local LLM (default: qwen2.5:14b) is downloaded with `ollama list`."
 
 ---
 
@@ -204,7 +245,7 @@ A dry-run shows the file list that would be ingested.
 → Graph processing might still be running. Check completion with `cognify_status()` and retry.
 
 **LLM format error during `recall`**
-→ llama3.1:8b sometimes does not respond in the JSON format Cognee expects. Use `search(query, search_type="CHUNKS")` as a fallback.
+→ Local LLMs (especially models 8B and below) sometimes do not respond in the JSON format Cognee expects. Use `search(query, search_type="CHUNKS")` as a fallback, or switch to a larger local LLM (qwen2.5:14b or above) or a **cloud API (Claude / OpenAI)**.
 
 **Knowledge ingestion shows `status=errored`**
 → The file may be too large. Run `split_knowledge.py` to split it before ingesting. `import_knowledge.py` retries up to 3 times on failure.

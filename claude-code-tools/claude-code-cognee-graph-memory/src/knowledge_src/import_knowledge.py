@@ -43,7 +43,13 @@ MAX_RETRY = 3
 
 
 def check_ollama() -> None:
-    """Verify Ollama is running and the llama3.1:8b model is available."""
+    """Verify Ollama is running and the LLM model specified in config/.env is available."""
+    env = _load_env()
+    llm_model = env.get("LLM_MODEL", "").strip()
+    if not llm_model:
+        logger.error("LLM_MODEL is not set in config/.env")
+        sys.exit(1)
+
     url = "http://localhost:11434/api/tags"
     try:
         with urllib.request.urlopen(url, timeout=5) as resp:
@@ -57,12 +63,12 @@ def check_ollama() -> None:
         sys.exit(1)
 
     model_names = [m.get("name", "") for m in data.get("models", [])]
-    if not any("llama3.1:8b" in name for name in model_names):
-        logger.error("llama3.1:8b not found. Available models: %s", model_names)
-        logger.error("Run 'ollama pull llama3.1:8b' and try again")
+    if not any(llm_model in name for name in model_names):
+        logger.error("%s not found. Available models: %s", llm_model, model_names)
+        logger.error("Run 'ollama pull %s' and try again", llm_model)
         sys.exit(1)
 
-    logger.info("Ollama check OK: llama3.1:8b is available")
+    logger.info("Ollama check OK: %s is available", llm_model)
 
 
 def _load_env() -> dict[str, str]:

@@ -1,6 +1,6 @@
 # Claude Code + Cognee Graph Memory System
 
-**Version**: 0.1.10
+**Version**: 0.1.11
 
 A module that adds graph-based memory to Claude Code. It accumulates work-related memory (rules, lessons learned, design decisions, incident records) across sessions, enabling retrieval in later sessions.
 
@@ -52,28 +52,27 @@ With the auto-accumulation harness in `harness/`, the more you use Claude Code, 
 |------|---|
 | OS | Linux (Ubuntu 22.04 or later) / WSL2 |
 | Python | 3.12 or higher |
-| Ollama | Latest version |
-| LLM model | llama3.1:8b (64K context) |
+| Ollama | Latest version (when using local LLM) |
+| LLM | qwen2.5:14b (num_ctx=8192) — local default. Cloud APIs (Claude / OpenAI) are strongly recommended for production. |
 | Claude Code | Latest version |
 
 ### Recommended hardware
 
-Graph memory requires LLM-based entity extraction. Since Ollama runs locally, the following hardware is recommended.
+| Use mode | GPU | RAM | LLM |
+|---------|-----|-----|-----|
+| **Cloud API (strongly recommended)** | Not required | 16GB+ | claude-sonnet-4-6 / gpt-4o, etc. |
+| Local LLM (recommended) | RTX 4070 12GB+ | 32GB+ | qwen2.5:32b or larger |
+| Local LLM (verified minimum) | RTX 4060 8GB | 32GB | qwen2.5:14b — works but response time is noticeably slower |
 
-| Item | Recommendation |
-|------|-------------|
-| GPU | RTX 4060 (8GB VRAM) class or higher |
-| Memory | 32GB RAM or higher |
-
-> Verified setup: RTX 4060 (8GB VRAM) + 32GB RAM
+See `docs/GETTING_STARTED.md` "Recommended LLM and Environment" for details.
 
 ### Technology stack
 
 | Technology | Details |
 |------|------|
 | Graph memory engine | Cognee |
-| LLM (entity extraction) | Llama 3.1 8B (64K context) |
-| LLM runtime | Ollama |
+| LLM (entity extraction) | qwen2.5:14b (default, local) / Claude API / OpenAI API |
+| LLM runtime | Ollama (local) or cloud API |
 | Graph DB | KuzuDB (bundled with Cognee) |
 | Vector DB | LanceDB (bundled with Cognee) |
 | Embedding model | FastEmbed all-MiniLM-L6-v2 |
