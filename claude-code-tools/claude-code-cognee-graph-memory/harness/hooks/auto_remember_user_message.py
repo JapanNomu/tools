@@ -33,11 +33,12 @@ Design notes:
 - Failure to record must never block the prompt (exit 0 always)
 """
 import json
-import os
-import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
+
+# import os
+# import subprocess
 
 # Skip very short messages (acknowledgements, single-word replies)
 MIN_LENGTH = 5

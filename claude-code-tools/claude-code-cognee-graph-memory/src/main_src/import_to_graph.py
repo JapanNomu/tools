@@ -24,8 +24,8 @@ import json
 import logging
 import os
 import sys
-import urllib.request
 import urllib.error
+import urllib.request
 from pathlib import Path
 
 from fastmcp import Client
@@ -50,7 +50,8 @@ def check_ollama() -> None:
     env = _load_env()
     llm_provider = env.get("LLM_PROVIDER", "").strip().lower()
     if llm_provider != "ollama":
-        logger.info("LLM_PROVIDER=%s; skipping Ollama connectivity check", llm_provider or "(unset)")
+        logger.info("LLM_PROVIDER=%s; skipping Ollama connectivity check",
+                    llm_provider or "(unset)")
         return
 
     llm_model = env.get("LLM_MODEL", "").strip()
@@ -171,11 +172,13 @@ def list_targets() -> None:
 def main() -> None:
     """Entry point."""
     parser = argparse.ArgumentParser(
-        description="Ingest MD files into Cognee graph memory (called from Claude Code at production runtime)"
+        description="Ingest MD files into Cognee graph memory (called from Claude Code at runtime)"
     )
     parser.add_argument("--target", help="Ingestion target (sample)")
-    parser.add_argument("--dry-run", action="store_true", help="Print the file list without ingesting")
-    parser.add_argument("--list-targets", action="store_true", help="Print the list of available targets")
+    parser.add_argument("--dry-run", action="store_true",
+                        help="Print the file list without ingesting")
+    parser.add_argument("--list-targets", action="store_true",
+                        help="Print the list of available targets")
     args = parser.parse_args()
 
     if args.list_targets:

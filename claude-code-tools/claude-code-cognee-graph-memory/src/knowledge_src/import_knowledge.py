@@ -47,7 +47,8 @@ def check_ollama() -> None:
     env = _load_env()
     llm_provider = env.get("LLM_PROVIDER", "").strip().lower()
     if llm_provider != "ollama":
-        logger.info("LLM_PROVIDER=%s; skipping Ollama connectivity check", llm_provider or "(unset)")
+        logger.info("LLM_PROVIDER=%s; skipping Ollama connectivity check",
+                    llm_provider or "(unset)")
         return
 
     llm_model = env.get("LLM_MODEL", "").strip()
@@ -118,7 +119,8 @@ async def import_one(client: Client, file_path: Path, idx: int, total: int) -> b
                 return True
 
             if "status=errored" in text:
-                logger.warning("[%d/%d] FAIL %s (attempt %d/%d): errored", idx, total, rel, attempt, MAX_RETRY)
+                logger.warning("[%d/%d] FAIL %s (attempt %d/%d): errored",
+                               idx, total, rel, attempt, MAX_RETRY)
                 if attempt < MAX_RETRY:
                     await asyncio.sleep(2)
                     continue
@@ -128,7 +130,8 @@ async def import_one(client: Client, file_path: Path, idx: int, total: int) -> b
             logger.warning("[%d/%d] Unexpected response: %s", idx, total, text[:120])
             return False
         except Exception as e:
-            logger.warning("[%d/%d] Exception (attempt %d/%d): %s", idx, total, attempt, MAX_RETRY, e)
+            logger.warning("[%d/%d] Exception (attempt %d/%d): %s",
+                           idx, total, attempt, MAX_RETRY, e)
             if attempt < MAX_RETRY:
                 await asyncio.sleep(2)
                 continue
@@ -157,7 +160,9 @@ async def import_all(files: list[Path], dry_run: bool) -> tuple[int, int]:
             else:
                 failed += 1
                 logger.error("3 failures, stopping: %s", f.relative_to(INPUT_DIR))
-                logger.error("Halting so the failure is not silently ignored. Investigate the cause and rerun.")
+                logger.error(
+                    "Halting so failure is not silently ignored. Investigate cause and rerun."
+                )
                 break
 
     return success, failed
@@ -166,7 +171,8 @@ async def import_all(files: list[Path], dry_run: bool) -> tuple[int, int]:
 def main() -> None:
     """Entry point."""
     parser = argparse.ArgumentParser(description="Ingest user_chunks/ into Cognee")
-    parser.add_argument("--dry-run", action="store_true", help="Print the file list without ingesting")
+    parser.add_argument("--dry-run", action="store_true",
+                        help="Print the file list without ingesting")
     args = parser.parse_args()
 
     if not INPUT_DIR.exists():

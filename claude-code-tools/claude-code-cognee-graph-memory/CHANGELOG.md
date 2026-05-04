@@ -5,6 +5,39 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.1] - 2026-05-04
+
+### Changed
+- Code style cleanup only — **no behavior changes**. v0.2.0 verification
+  results (UT 110 / IT 6 / ET 4 / ST 4 all passed; qwen2.5:14b matrix
+  verification 8 tools × 5 runs) remain valid because no logic was modified.
+- Applied Ruff lint fixes to comply with cognee-integrations coding
+  standards (`line-length = 100`, `select = ["E", "F", "I", "W"]`,
+  `target-version = "py310"`):
+  - `harness/hooks/auto_remember_completion.py`: F401 — unused
+    `import os` commented out and moved out of import block.
+  - `harness/hooks/auto_remember_user_message.py`: F401 — unused
+    `import os` and `import subprocess` commented out and moved out
+    of import block.
+  - `harness/hooks/cognee_remember_flusher.py`: F841 — `result =`
+    assignment commented out (function call retained); E501 — argparse
+    `--interval` line wrapped to fit 100-char limit.
+  - `src/knowledge_src/import_knowledge.py`: E501 — five logger and
+    argparse lines wrapped (one log message wording slightly shortened
+    while preserving meaning: "the failure" → "failure", "the cause"
+    → "cause").
+  - `src/main_src/import_to_graph.py`: I001 — `urllib.error` and
+    `urllib.request` imports reordered alphabetically; E501 — argparse
+    description and three help lines wrapped (one description shortened
+    while preserving meaning: "production runtime" → "runtime").
+
+### Why
+- Preparing the toolkit for potential cognee-integrations contribution
+  (per cognee co-founder Vasilije Markovic's invitation on X to send a
+  PR with toolkit features). The cognee-integrations CI enforces
+  Ruff lint rules above; passing those rules ahead of time avoids
+  CI rejections during the PR review process.
+
 ## [0.2.0] - 2026-05-04
 
 ### Added

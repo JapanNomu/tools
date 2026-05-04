@@ -1,6 +1,6 @@
 # Claude Code + Cognee Graph Memory System
 
-**Version**: 0.2.0  
+**Version**: 0.2.1  
 **Verified Cognee version**: 1.0.5 (Ladybug DB)
 
 A module that adds graph-based memory to Claude Code. It accumulates work-related memory (rules, lessons learned, design decisions, incident records) across sessions, enabling retrieval in later sessions.
