@@ -1,10 +1,11 @@
 # Design decisions
 
-## Why KuzuDB for the graph database
+## Why Cognee for the graph memory engine
 
-KuzuDB was chosen because it is Python-native, runs in-process, and is bundled
-with Cognee (no extra installation). Compared with PostgreSQL or Neo4j, it was
-the only option that satisfied the local-only and zero-cost requirements.
+Cognee was chosen because the graph DB (Ladybug DB since Cognee 1.0.4, KuzuDB up
+to 1.0.3), vector DB (LanceDB), and embedding model (FastEmbed) are all bundled
+with no extra installation, and everything runs fully locally. This satisfies
+the no-external-API-key and zero-additional-cost requirements.
 
 ## Why MCP scope=user
 
@@ -12,18 +13,13 @@ The Cognee MCP server is registered with `scope=user`. With `scope=project`,
 only that one project's Claude Code session could access it. Cross-project
 access is the whole point of this graph memory system.
 
-## Why FastEmbed all-MiniLM-L6-v2 for embeddings
+## Why Ollama + qwen2.5:14b for the LLM
 
-FastEmbed's all-MiniLM-L6-v2 was chosen because it is bundled with Cognee, runs
-fully locally without an external API key, and is lightweight (384 dimensions)
-yet accurate. Versus OpenAI embeddings, it satisfies the zero-additional-cost
-requirement.
-
-## Why Ollama + llama3.1:8b for the LLM
-
-Ollama with llama3.1:8b runs fully locally, needs no external API key, and
+Ollama with qwen2.5:14b runs fully locally, needs no external API key, and
 reuses an existing Ollama installation. It is accurate enough for entity
-extraction and incurs no additional cost.
+extraction and incurs no additional cost. Among local LLMs, qwen2.5:14b is the
+only one verified to satisfy Cognee's structured-output requirements (perfect
+20/20 score in the v0.1.x verification matrix).
 
 ## Why stdio mode for transport
 

@@ -101,7 +101,8 @@ summaries into Cognee via `mcp__cognee__remember`.
 ## 7. Use search(CHUNKS) instead of recall
 
 `mcp__cognee__recall` may fail with an LLM format error when running on
-llama3.1:8b. The distribution's verification flow recommends `search(CHUNKS)`.
+local LLMs other than qwen2.5:14b. The distribution's verification flow
+recommends `search(CHUNKS)`.
 
 - For lookups, use `search(query, search_type="CHUNKS")` by default
 - Even when `recall` would have been a natural choice, try `search(CHUNKS)` first

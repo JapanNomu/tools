@@ -70,9 +70,7 @@ async def remember_via_mcp(project_root: Path, data: str, dataset_name: str) -> 
     Returns True on success, False on failure.
     """
     try:
-        # Reuse the same fastmcp client setup that import_to_graph.py uses
-        sys.path.insert(0, str(project_root / "src" / "main_src"))
-        # Imported lazily; fastmcp lives in the distribution's venv
+        # fastmcp lives in the distribution's venv
         from fastmcp import Client
         from fastmcp.client.transports import StdioTransport
 
@@ -156,10 +154,11 @@ async def flush_once() -> None:
         else:
             append_failed(entry)
 
-    # Remove the failed entries from the queue (already saved to failed.jsonl)
+    # Keep failed valid-data entries in the queue (drop succeeded and blank lines;
+    # failed entries are also saved to failed.jsonl for reference)
     remaining = [
         line for i, line in enumerate(lines)
-        if i not in succeeded_indices and not line.strip()
+        if i not in succeeded_indices and line.strip()
     ]
     if remaining:
         QUEUE_PATH.write_text("\n".join(remaining) + "\n", encoding="utf-8")

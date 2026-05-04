@@ -16,7 +16,7 @@ To use all features (especially `recall` and `search(GRAPH_COMPLETION)`) **relia
 |------|-----|------|
 | Cloud API (**strongly recommended**) | **Anthropic Claude API** (claude-sonnet-4-6, etc.) / **OpenAI API** (gpt-4o, etc.) | ★★★ Near-100% reliability with official structured-output support |
 | Local LLM (conditionally OK) | qwen2.5:14b / qwen2.5:32b / qwen2.5:72b / llama3.3:70b — 14B or larger | ★★ Acceptable if your GPU has enough memory |
-| Local LLM (**not recommended**) | llama3.1:8b / llama3.2:3b / gemma4:e4b | ★ Frequent JSON Schema violations in structured output |
+| Local LLM (**not recommended**) | Models smaller than qwen2.5:14b (llama3.1:8b / llama3.2:3b / gemma4:e4b, etc.) | ★ Frequent JSON Schema violations in structured output |
 
 Local LLM operation avoids API billing, but its structured-output reliability is clearly inferior to cloud APIs. For production use or stable operation, choose a cloud API.
 
@@ -28,7 +28,7 @@ Local LLM operation avoids API billing, but its structured-output reliability is
 | RAM | 16GB+ | **32GB+** |
 | LLM | claude-sonnet-4-6 / gpt-4o, etc. | **qwen2.5:32b or higher** (14B+ is the minimum) |
 
-Local LLM operation becomes practical with **a GPU that has 12GB+ VRAM**. With less VRAM (e.g. NVIDIA GeForce RTX 4060 Laptop GPU with 8GB VRAM), 14B-class models can still run, but model weights spill out of GPU memory and partially offload to CPU, which makes **response time noticeably slower** (about 2-3x in our experience).
+Local LLM operation becomes practical with **a GPU that has 12GB+ VRAM**. With less VRAM (e.g. NVIDIA GeForce RTX 4060 Laptop GPU with 8GB VRAM), 14B-class models can still run, but model weights spill out of GPU memory and partially offload to CPU.
 
 ### Verification Record (reference)
 
@@ -36,10 +36,18 @@ This distribution's full feature set has been verified in the following environm
 
 - Test environment: GPU **NVIDIA GeForce RTX 4060 Laptop GPU (VRAM 8GB)** / RAM 32GB
 - Test LLM: **qwen2.5:14b** (num_ctx=8192)
-- Result: **20/20 success** (remember 5/5 ✅, search(CHUNKS) 5/5 ✅, search(GRAPH_COMPLETION) 5/5 ✅, recall 5/5 ✅, zero JSON Schema violations)
-- Caveat: With model weights at 9GB and only 8GB of GPU memory, part of the workload offloads to CPU and **response time is slow** (about 2-3x slower than gemma4:e4b 16K).
+- Verified Cognee version: **1.0.5 (Ladybug DB)**
+- Result: **35/40 success** (remember 5/5 ✅, search(CHUNKS) 5/5 ✅, search(GRAPH_COMPLETION) 5/5 ✅, recall 5/5 ✅, cognify 5/5 ✅, improve 5/5 ✅, forget_memory 5/5 ✅, **save_interaction 0/5 ❌** = known limitation, see below)
+- Response time (measured on Ladybug DB):
+  - search(CHUNKS): avg 3.2s (deterministic, no LLM)
+  - search(GRAPH_COMPLETION): avg 14.6s (range 12-18s)
+  - recall (Q-A, TEMPORAL routing): 20-24s
+  - recall (Q-B, GRAPH_COMPLETION_COT routing): 154-156s (Chain-of-Thought reasoning)
+  - improve / forget_memory: all immediate (under a few seconds)
 
-In other words, the distribution **just barely runs all features on an 8GB-VRAM laptop GPU (RTX 4060 Laptop GPU) with qwen2.5:14b**, but for comfortable use we recommend meeting the "Recommended Environment" above.
+**Ladybug DB (introduced in Cognee 1.0.4) accelerates graph traversal**, making GRAPH_COMPLETION and recall practically usable even with qwen2.5:14b (significant subjective improvement over the v0.1.x KuzuDB environment).
+
+In other words, the distribution **runs all major features at practical speed on an 8GB-VRAM laptop GPU (RTX 4060 Laptop GPU) with qwen2.5:14b + Ladybug DB**.
 
 ### Default Configuration
 
@@ -56,11 +64,11 @@ cd <cloned directory>
 src/venv/bin/python3 src/sample_src/load_sample.py
 ```
 
-The four files under `knowledge/sample_knowledge/` will be ingested into Cognee one by one.
+The five files under `knowledge/sample_knowledge/` will be ingested into Cognee one by one.
 
 ```
-2026-04-29 10:00:00 [INFO] [1/4] 01_claude_code_tips.md → dataset=sample_knowledge
-2026-04-29 10:00:30 [INFO] [2/4] 02_software_dev_lessons.md → dataset=sample_knowledge
+2026-04-29 10:00:00 [INFO] [1/5] 01_claude_code_tips.md → dataset=sample_knowledge
+2026-04-29 10:00:30 [INFO] [2/5] 02_software_dev_lessons.md → dataset=sample_knowledge
 ...
 ```
 
@@ -238,6 +246,13 @@ A dry-run shows the file list that would be ingested.
 
 ## Troubleshooting
 
+**`save_interaction` fails with `add_rule_associations() got an unexpected keyword argument 'context'`**
+→ This is a **known limitation in v0.2.0**. API mismatch between cognee-mcp 0.5.4 and cognee 1.0.5
+(cognee 1.0.5 renamed the `add_rule_associations` argument from `context` to `ctx`, but cognee-mcp
+has not been updated yet).
+As a workaround, use `remember(data="User: question\nAssistant: answer")` instead — this persists
+the interaction text immediately into the permanent memory.
+
 **SearchPreconditionError**
 → No data has been ingested yet. Run Step 1 first.
 
@@ -249,3 +264,52 @@ A dry-run shows the file list that would be ingested.
 
 **Knowledge ingestion shows `status=errored`**
 → The file may be too large. Run `split_knowledge.py` to split it before ingesting. `import_knowledge.py` retries up to 3 times on failure.
+
+---
+
+## Appendix: v0.1.x (Cognee 1.0.3 / KuzuDB) Local LLM Comparison Data (Reference)
+
+> This section is a reference record of the local-LLM comparison verification data from v0.1.x (KuzuDB environment). In v0.2.0, the graph DB has been replaced with Ladybug DB, and only qwen2.5:14b has been re-verified (see "Verification Results" near the top of this file). Use this section as background information when choosing a local LLM.
+
+### Verification environment (v0.1.x)
+
+- Cognee 1.0.3 / KuzuDB 0.11.3
+- GPU: NVIDIA GeForce RTX 4060 Laptop GPU (VRAM 8GB) / RAM 32GB
+- Verification date: 2026-05-02
+- Runs per LLM: 4 tools × 5 runs = 20 runs
+
+### LLM × Tool result summary
+
+| LLM (num_ctx) | remember×5 | search(CHUNKS)×5 | search(GRAPH_COMPLETION)×5 | recall×5 | Total |
+|---|---|---|---|---|---|
+| llama3.1:8b (2048, initial) | 5/5 ✅ | 5/5 ✅ | 4/5 ⚠️ (#1: JSON Schema violation) | 1/5 ✅ + 2/5 ⚠️ + 2/5 ❌ (Q-B 2/2 fail) | 14/20 |
+| llama3.1:8b (65536, retest) | 5/5 ✅ | 5/5 ✅ | 2/5 ✅ + 3/5 ❌ (pydantic ValidationError) | 2/5 ✅ + 3/5 ❌ (Q-B 2/2 fail continued) | 14/20 |
+| llama3.2:3b (2048 default) | 0/5 ❌ Timeout | (skipped) | (skipped) | (skipped) | 0/20 |
+| gemma4:e4b (16384) | 5/5 ✅ | 5/5 ✅ | **5/5 ✅** | 3/5 ✅ + 2/5 ❌ (Q-B 2/2 JSON Schema violation) | 18/20 |
+| **qwen2.5:14b (8192)** | **5/5 ✅** | **5/5 ✅** | **5/5 ✅** | **5/5 ✅** (Q-A/Q-B all correct) | **20/20** |
+| claude-sonnet-4-6 | (not run, to avoid API cost) | - | - | - | - |
+
+### Key observations (v0.1.x)
+
+- **qwen2.5:14b (num_ctx=8192) was the only LLM with a perfect score** (20/20). The only local LLM that fully answered recall Q-B (reasoning that includes background and rationale)
+- **llama3.1:8b** did not improve with larger num_ctx; recall Q-B failed 2/2
+- **llama3.2:3b** timed out at the connection test stage (too lightweight to complete entity extraction)
+- **gemma4:e4b** scored full marks on GRAPH_COMPLETION but failed recall Q-B with JSON Schema violations
+- This is the basis for shipping **qwen2.5:14b** as the default in this distribution
+
+### Verification queries (v0.1.x)
+
+- Q-A: `When can I run git push?` (simple fact retrieval)
+- Q-B: `Why is KuzuDB used in this project?` (reasoning that requires background and rationale)
+
+### num_ctx settings rationale
+
+| Model | num_ctx | Rationale |
+|---|---|---|
+| llama3.1:8b | 65536 | 8B model weights 4.7GB + KV cache (FP16, 64K) ~4.0GB = 8.7GB total. Some offload on 8GB GPU but mostly GPU-resident. Plenty of headroom for Cognee cognify long-text processing |
+| qwen2.5:14b | 8192 | Model weights 9GB are already in CPU offload. Increasing num_ctx slows it down further, so capped at 8K (sufficient for Cognee's short-prompt structured-output use case) |
+| gemma4:e4b | 16384 | Model weights 5GB + KV cache 1GB = 6GB total, fully GPU-resident. Wider context favors Cognee cognify (long-document chunked processing) |
+
+### v0.2.0 scope
+
+In v0.2.0, only **qwen2.5:14b** has been re-verified across all features (8 tools) on Cognee 1.0.5 / Ladybug DB (35/40 ✅; see "Verification Results" near the top of this file). Re-verification of other LLMs on Ladybug DB has been left as future work.

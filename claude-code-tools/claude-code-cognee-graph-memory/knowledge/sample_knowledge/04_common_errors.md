@@ -15,8 +15,8 @@ before `list_data` to re-initialize the database.
 ## Ollama connection error
 
 If `import_to_graph.py` reports "Cannot reach Ollama," the Ollama service is
-not running. Run `ollama serve` and retry. Also check whether `llama3.1:8b`
-has been downloaded with `ollama list`.
+not running. Run `ollama serve` and retry. Also check whether `qwen2.5:14b`
+(or the configured local LLM) has been downloaded with `ollama list`.
 
 ## recall returns empty results
 
@@ -27,9 +27,9 @@ in the background, so right after a large bulk ingest, check completion with
 
 ## LLM format error (recall failure)
 
-`recall` can fail with an LLM JSON-format error when llama3.1:8b does not
-respond in the JSON shape Cognee expects. As a workaround, use
-`search(search_type="CHUNKS")` to retrieve text directly via vector search.
+`recall` can fail with an LLM JSON-format error when local LLMs smaller than
+qwen2.5:14b do not respond in the JSON shape Cognee expects. As a workaround,
+use `search(search_type="CHUNKS")` to retrieve text directly via vector search.
 
 ## LLM_ENDPOINT in .env requires /v1
 

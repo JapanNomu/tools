@@ -11,11 +11,9 @@ How it works:
 - The prompt is appended to ~/.claude/cognee_pending_remembers.jsonl
 - A separate process (cognee_remember_flusher.py) drains the queue and
   actually calls `remember` on the cognee MCP server
-  (Calling MCP directly from inside the hook would delay the start of
-   the AI turn, so an asynchronous file-queue approach is used.)
 
-A simpler alternative would be to call `remember` directly here for
-small setups. This sample takes the queue approach, which scales better.
+Calling MCP directly from inside the hook would delay the start of the
+AI turn, so this implementation uses an asynchronous file-queue approach.
 
 Input: JSON on stdin: {"prompt": "...", "session_id": "..."}
 Output: exit 0 (always allowed; failure to record must never block the prompt)

@@ -1,7 +1,5 @@
 # Environment Setup Guide
 
-Version: 1.0
-
 ---
 
 ## 1. Prerequisites
@@ -13,7 +11,7 @@ Version: 1.0
 | OS | Linux (Ubuntu 22.04 or later) / WSL2 |
 | Python | 3.12 or higher |
 | Ollama | Latest version (https://ollama.com) |
-| LLM model | llama3.1:8b (`ollama pull llama3.1:8b`) |
+| LLM model | qwen2.5:14b (`ollama pull qwen2.5:14b`) |
 | Claude Code | Latest version |
 
 ### 1-2. Ollama startup check
@@ -21,7 +19,7 @@ Version: 1.0
 ```bash
 ollama serve             # Start in background
 ollama list              # Show available models
-ollama pull llama3.1:8b  # Download model if not yet pulled
+ollama pull qwen2.5:14b  # Download model if not yet pulled
 ```
 
 ---
@@ -140,8 +138,8 @@ The settings registered with `claude mcp add` are **not picked up by Claude Code
 |------|------|
 | Install method | `pip install cognee-mcp "cognee[fastembed]"` (latest version) |
 | Pinned version file | `src/requirements.txt` (not yet provided; future work) |
-| Verified versions | Cognee 1.0.3, fastmcp 3.2.4 (as of 2026-04-27) |
-| Pinning specific versions | Use e.g. `pip install "cognee-mcp==0.5.4" "cognee[fastembed]==1.0.3"` |
+| Verified versions | Cognee 1.0.5, cognee-mcp 0.5.4, ladybug 0.16.0 (as of 2026-05-04) |
+| Pinning specific versions | Use e.g. `pip install "cognee-mcp==0.5.4" "cognee[fastembed]==1.0.5"` |
 
 ---
 
