@@ -130,6 +130,46 @@ The settings registered with `claude mcp add` are **not picked up by Claude Code
 - VSCode: open the "MCP servers" panel and check that `cognee: ✓ Connected` is shown
 - Inside a session: run `/mcp` and check that `cognee: connected` is shown
 
+### 2-4. Schedule the queue-flush batch processor (v0.3.0)
+
+The hooks (`auto_remember_user_message.py` / `auto_remember_completion.py`) only append to a queue file (`~/.claude/cognee_pending_remembers.jsonl`). To actually persist the queued entries into Cognee graph memory, the `cognee-queue-flush` skill must run periodically inside the Claude Code session.
+
+**Architecture rationale**: This skill runs in the same Claude Code process ("live in the current process") and reuses the existing MCP cognee server. It does NOT spawn a new cognee-mcp process. This is what avoids BUG-008 (Ladybug DB lock contention).
+
+**Setup**: Inside Claude Code, register the skill on a recurring schedule. Choose one of:
+
+| Method | Command | Lifetime |
+|---|---|---|
+| `/loop` (interactive) | `/loop 5m cognee-queue-flush` | **Session only** — dies when you exit Claude Code |
+| `CronCreate` (in-session) | Inside Claude Code: `CronCreate(cron="*/5 * * * *", prompt="cognee-queue-flush", recurring=true)` | **Session only** — dies when you exit Claude Code |
+| `CronCreate(durable=true)` (persistent) | Inside Claude Code: `CronCreate(cron="*/5 * * * *", prompt="cognee-queue-flush", recurring=true, durable=true)` | **Persistent** — saved to `~/.claude/scheduled_tasks.json`, auto-restored on next launch |
+
+The recommended cadence is **every 5 minutes**. Tune to your needs.
+
+**Persistence note**: `/loop` and `CronCreate(durable=false)` registrations live inside one Claude Code session only — you must re-register them each time you launch Claude Code. Only `CronCreate(durable=true)` survives restarts.
+
+**`/loop` cannot be made persistent** — the slash command does not expose a `durable` option. The `durable=true` form is only available through the `CronCreate` Tool, which is invoked by Claude Code (the AI), **not typed by you**. To set up a persistent schedule, ask Claude Code in chat to run it once, e.g.:
+
+> Please call `CronCreate` with `cron="*/5 * * * *"`, `prompt="cognee-queue-flush"`, `recurring=true`, `durable=true` so the queue keeps draining after restarts.
+
+The AI runs the tool call once, the schedule is saved, and you do not need to ask again.
+
+See `docs/HARNESS_GUIDE.md` Step 4 for the full discussion (per-invocation drain limit tuning via `COGNEE_QUEUE_FLUSH_MAX_PER_RUN`, persistence trade-offs, etc.).
+
+**Verify**: After setting up, send a message to Claude Code, wait 5 minutes, then run inside Claude Code: `mcp__cognee__search(search_query="<some recent text>", search_type="CHUNKS")`. The recent text should be retrievable.
+
+### 2-5. CLI tools usage constraint (v0.3.0)
+
+The following CLI tools spawn a new `cognee-mcp` process and **must NOT be run while Claude Code is open** (it will trigger BUG-008 lock contention):
+
+- `src/sample_src/load_sample.py` (load bundled samples)
+- `src/sample_src/delete_sample.py` (delete sample dataset)
+- `src/knowledge_src/import_knowledge.py` (bulk-import your own knowledge files)
+
+**Usage rule**: Run these tools **before launching Claude Code**, or after exiting Claude Code.
+
+**Alternative for delete**: To delete a dataset while Claude Code is running, call `mcp__cognee__delete_dataset` from within Claude Code instead of running the CLI script.
+
 ---
 
 ## 3. Dependency version policy
@@ -138,8 +178,9 @@ The settings registered with `claude mcp add` are **not picked up by Claude Code
 |------|------|
 | Install method | `pip install cognee-mcp "cognee[fastembed]"` (latest version) |
 | Pinned version file | `src/requirements.txt` (not yet provided; future work) |
-| Verified versions | Cognee 1.0.5, cognee-mcp 0.5.4, ladybug 0.16.0 (as of 2026-05-04) |
-| Pinning specific versions | Use e.g. `pip install "cognee-mcp==0.5.4" "cognee[fastembed]==1.0.5"` |
+| Verified versions | Cognee 1.0.8, cognee-mcp 0.5.4, ladybug (bundled with cognee 1.0.8); all 21 BATCH tests passing (as of 2026-05-07, v0.3.0) |
+| Pinning specific versions | Use e.g. `pip install "cognee-mcp==0.5.4" "cognee[fastembed]==1.0.8"` |
+| Required when using Ollama | cognee 1.0.7/1.0.8 has a regression where `test_llm_connection` hits an Ollama URL without `/v1` and fails with 404. Set `LLM_ENDPOINT=http://localhost:11434/v1` (the `/v1` is required) and `COGNEE_SKIP_CONNECTION_TEST=true` in `config/.env`. Both are pre-configured in `.env.example`. |
 
 ---
 

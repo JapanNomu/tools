@@ -1,7 +1,7 @@
 # Claude Code + Cognee Graph Memory System
 
-**Version**: 0.2.1  
-**Verified Cognee version**: 1.0.5 (Ladybug DB)
+**Version**: 0.3.0  
+**Verified Cognee version**: 1.0.8 (Ladybug DB)
 
 A module that adds graph-based memory to Claude Code. It accumulates work-related memory (rules, lessons learned, design decisions, incident records) across sessions, enabling retrieval in later sessions.
 
@@ -49,18 +49,19 @@ Ladybug DB (introduced in Cognee 1.0.4) accelerates graph traversal, making qwen
 | `remember` (with synchronous cognify) | avg 92s (range 44-237s) | Includes entity extraction |
 | `cognify` (background processing) | avg 145s (range 99-232s) | For long documents; runs in background to avoid MCP timeout |
 
-Test environment: NVIDIA GeForce RTX 4060 Laptop GPU (VRAM 8GB) / RAM 32GB / qwen2.5:14b (num_ctx=8192) / Cognee 1.0.5 (Ladybug DB)
+Test environment: NVIDIA GeForce RTX 4060 Laptop GPU (VRAM 8GB) / RAM 32GB / qwen2.5:14b (num_ctx=8192) / Cognee 1.0.5 (Ladybug DB) (note: the table above shows v0.2.0 release-time measurements; v0.3.0 has been re-tested with cognee 1.0.8 for the new BATCH suite — the queue-drain test suite for the v0.3.0 in-Claude-Code skill — and all BATCH tests passed)
 
 ---
 
-## Known Limitations (v0.2.0)
+## Known Limitations (v0.2.0; still applicable in v0.3.0 since the same cognee-mcp 0.5.4 is used)
 
 - **`save_interaction` tool is unavailable**
   - Error: `add_rule_associations() got an unexpected keyword argument 'context'`
-  - Cause: API mismatch between cognee-mcp 0.5.4 and cognee 1.0.5 (cognee 1.0.5 renamed the `context` argument to `ctx`, but cognee-mcp has not been updated)
+  - Cause: API mismatch between cognee-mcp 0.5.4 and cognee (cognee 1.0.5 and later renamed the `context` argument to `ctx`, but cognee-mcp 0.5.4 has not been updated)
   - Workaround: To persist an interaction immediately, use `remember(data="User: ... / Assistant: ...")`
 
 All other tools (`remember`, `search`, `recall`, `cognify`, `improve`, `forget_memory`, etc.) have been verified to work correctly in v0.2.0.
+v0.3.0 addresses BUG-008 (Ladybug DB lock contention) and BUG-009 (silent data loss when `mcp__cognee__remember` returns failure with `is_error=False`). The queue drain has moved from the out-of-process `harness/hooks/cognee_remember_flusher.py` (v0.2.x; removed) to the new in-Claude-Code skill `harness/skills/cognee-queue-flush/SKILL.md`, which calls `mcp__cognee__remember` on the already-running MCP cognee server so that no second `cognee-mcp` process is ever spawned. The new architecture is verified end-to-end by 21 BATCH tests (UT 12 + IT 4 + ET 3 + ST 2), all passing, plus a hands-on V03-SETUP-4 walkthrough recording **zero** lock-contention errors across more than 50 MCP `remember` / `search` / `delete_dataset` calls under the BUG-008 reproduction condition.
 
 ---
 

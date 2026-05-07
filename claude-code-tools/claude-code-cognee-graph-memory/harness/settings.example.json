@@ -1,5 +1,5 @@
 {
-  "_comment": "Sample to merge into ~/.claude/settings.json to enable the Cognee graph-memory harness. Merge manually with your existing settings.json. See docs/HARNESS_GUIDE.md for the meaning of each value.",
+  "_comment": "Sample to merge into ~/.claude/settings.json to enable the Cognee graph-memory harness (v0.3.0 architecture). Merge manually with your existing settings.json. See docs/HARNESS_GUIDE.md for the meaning of each value.",
 
   "hooks": {
     "UserPromptSubmit": [
@@ -33,10 +33,11 @@
       "mcp__cognee__cognify",
       "mcp__cognee__cognify_status",
       "mcp__cognee__list_data",
-      "Bash(python3 ~/.claude/hooks/cognee_remember_flusher.py*)"
+      "mcp__cognee__delete_dataset"
     ]
   },
 
-  "_comment_cron": "Run cognee_remember_flusher.py periodically (cron recommended). Example (every 5 minutes):",
-  "_comment_cron_example": "*/5 * * * * /usr/bin/python3 /home/youruser/.claude/hooks/cognee_remember_flusher.py >> /home/youruser/.claude/cognee_flusher.log 2>&1"
+  "_comment_v030_arch": "v0.3.0 architecture: hooks above only append to the queue (~/.claude/cognee_pending_remembers.jsonl). The queue is drained by the cognee-queue-flush skill running inside the same Claude Code session, scheduled via /loop or CronCreate. This avoids BUG-008 (Ladybug DB lock contention) because no new cognee-mcp process is spawned.",
+  "_comment_queue_flush_setup": "After installing this harness, run /loop 5m cognee-queue-flush inside Claude Code, or use CronCreate to schedule periodic runs. See harness/skills/cognee-queue-flush/SKILL.md for details.",
+  "_comment_v022_legacy_removed": "The old cognee_remember_flusher.py hook has been removed in v0.3.0. Do NOT install or run it: it spawns a new cognee-mcp process and triggers BUG-008. Use the cognee-queue-flush skill instead."
 }

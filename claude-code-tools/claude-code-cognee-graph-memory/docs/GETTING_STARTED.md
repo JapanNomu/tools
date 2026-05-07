@@ -36,8 +36,8 @@ This distribution's full feature set has been verified in the following environm
 
 - Test environment: GPU **NVIDIA GeForce RTX 4060 Laptop GPU (VRAM 8GB)** / RAM 32GB
 - Test LLM: **qwen2.5:14b** (num_ctx=8192)
-- Verified Cognee version: **1.0.5 (Ladybug DB)**
-- Result: **35/40 success** (remember 5/5 ✅, search(CHUNKS) 5/5 ✅, search(GRAPH_COMPLETION) 5/5 ✅, recall 5/5 ✅, cognify 5/5 ✅, improve 5/5 ✅, forget_memory 5/5 ✅, **save_interaction 0/5 ❌** = known limitation, see below)
+- Verified Cognee version: **1.0.8 (Ladybug DB; updated from 1.0.5 in v0.3.0)**
+- Result: **35/40 success** (measured at v0.2.0 release on cognee 1.0.5) (remember 5/5 ✅, search(CHUNKS) 5/5 ✅, search(GRAPH_COMPLETION) 5/5 ✅, recall 5/5 ✅, cognify 5/5 ✅, improve 5/5 ✅, forget_memory 5/5 ✅, **save_interaction 0/5 ❌** = known limitation, see below). In v0.3.0, all 21 BATCH tests (UT 12 + IT 4 + ET 3 + ST 2) — verifying the new in-Claude-Code queue-drain skill — pass on cognee 1.0.8.
 - Response time (measured on Ladybug DB):
   - search(CHUNKS): avg 3.2s (deterministic, no LLM)
   - search(GRAPH_COMPLETION): avg 14.6s (range 12-18s)
@@ -56,6 +56,8 @@ The default `config/.env.example` ships with **qwen2.5:14b** (num_ctx=8192). If 
 ---
 
 ## Step 1: Verify operation with bundled samples
+
+> ⚠️ **Important (v0.3.0)**: `load_sample.py` spawns a new `cognee-mcp` process. **Run it while Claude Code is NOT running** (otherwise BUG-008 lock contention will trigger). After Step 1 completes, you can launch Claude Code in Step 2.
 
 Run the following in your terminal.
 
@@ -78,12 +80,18 @@ Time estimate: 2-5 minutes (includes Ollama graph processing).
 
 When running on a local LLM, the model sometimes returns unstable responses that cause structured-output validation errors. After 5 retries the script may abort with errors such as `InstructorRetryException` or `Field required`. If this happens, clean up and retry:
 
+> ⚠️ **Important (v0.3.0)**: `delete_sample.py` and `load_sample.py` spawn a new `cognee-mcp` process. **Run them only when Claude Code is NOT running** (otherwise BUG-008 lock contention will trigger). If Claude Code is open, exit it first, run the cleanup, then restart Claude Code.
+
 ```bash
+# Make sure Claude Code is exited first (no `claude` process running)
+
 # Remove any partially-ingested sample data
 src/venv/bin/python3 src/sample_src/delete_sample.py
 
 # Re-ingest the samples
 src/venv/bin/python3 src/sample_src/load_sample.py
+
+# Now you can launch Claude Code
 ```
 
 If the failure persists, check that Ollama is reachable (`ollama list` should show the model), try a larger local LLM (e.g. `qwen2.5:32b` / `qwen2.5:72b` / `llama3.3:70b`) by changing `LLM_MODEL` in `config/.env`, or **switch to a cloud API (Claude / OpenAI)** — this error rarely happens with cloud APIs.
@@ -182,10 +190,27 @@ Steps to ingest existing knowledge files (`.md`).
 
 ### Step 4-1: Delete sample data (optional)
 
-If you no longer need the bundled samples:
+If you no longer need the bundled samples, choose **one** of the following two methods:
+
+**Method A (recommended): Delete via Claude Code MCP tool** (works while Claude Code is running)
+
+Inside Claude Code, ask Claude:
+
+```
+Please delete the sample_knowledge dataset
+```
+
+Claude will call `mcp__cognee__delete_dataset(dataset_name="sample_knowledge")`. This uses the existing MCP cognee server (no new process is spawned), so it runs safely while Claude Code is open.
+
+**Method B: Delete via CLI script** (Claude Code MUST be exited)
+
+> ⚠️ **Important (v0.3.0)**: `delete_sample.py` spawns a new `cognee-mcp` process. **Exit Claude Code first**, otherwise BUG-008 lock contention will trigger.
 
 ```bash
+# Make sure Claude Code is exited (no `claude` process running)
 src/venv/bin/python3 src/sample_src/delete_sample.py
+
+# Now you can relaunch Claude Code
 ```
 
 Only the `sample_knowledge` dataset is removed.
@@ -214,8 +239,13 @@ Each `.md` under `user_knowledge/` is split by H2 heading and written to `knowle
 
 ### Step 4-4: Ingest the chunks
 
+> ⚠️ **Important (v0.3.0)**: `import_knowledge.py` spawns a new `cognee-mcp` process. **Exit Claude Code first**, otherwise BUG-008 lock contention will trigger. Run the script while Claude Code is NOT running, then relaunch Claude Code afterwards.
+
 ```bash
+# Make sure Claude Code is exited (no `claude` process running)
 src/venv/bin/python3 src/knowledge_src/import_knowledge.py
+
+# Now you can relaunch Claude Code
 ```
 
 Files in `user_chunks/` are ingested into Cognee one at a time, with retries on cognify failure.

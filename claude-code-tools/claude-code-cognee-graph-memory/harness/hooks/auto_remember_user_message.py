@@ -6,11 +6,17 @@ Captures the prompt the user submits, and enqueues it so that it can
 be persisted into Cognee graph memory via the cognee MCP `remember`
 tool. This is what enables cross-session context retrieval.
 
-How it works:
+How it works (v0.3.0 architecture):
 - The UserPromptSubmit hook reads the prompt from stdin
 - The prompt is appended to ~/.claude/cognee_pending_remembers.jsonl
-- A separate process (cognee_remember_flusher.py) drains the queue and
-  actually calls `remember` on the cognee MCP server
+- A batch processor scheduled via Claude Code's built-in scheduler
+  (loop / CronCreate) runs in the same Claude Code session and calls
+  `mcp__cognee__remember` against the existing MCP cognee server
+  (no new cognee-mcp process is spawned).
+
+This design avoids BUG-008 (Ladybug DB lock contention): the cognee-mcp
+server process count stays at 1 (the one started at Claude Code session
+launch), so concurrent .lbug file lock requests never occur.
 
 Calling MCP directly from inside the hook would delay the start of the
 AI turn, so this implementation uses an asynchronous file-queue approach.
@@ -53,8 +59,9 @@ DATASET_NAME = "user_messages"
 def queue_remember(message: str, session_id: str) -> None:
     """
     Append the message to ~/.claude/cognee_pending_remembers.jsonl.
-    A flusher process picks up entries from this file and calls
-    `remember` against the cognee MCP server.
+    A batch processor (scheduled via Claude Code's loop / CronCreate)
+    picks up entries from this file and calls `mcp__cognee__remember`
+    against the EXISTING MCP cognee server (no new process spawn).
     """
     queue_path = Path.home() / ".claude" / "cognee_pending_remembers.jsonl"
     queue_path.parent.mkdir(parents=True, exist_ok=True)

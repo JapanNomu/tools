@@ -10,11 +10,15 @@ The Stop hook fires at the end of an AI turn. We pull the last
 assistant message from the transcript, truncate it if needed, and
 push it onto the queue.
 
-Same queue mechanism as auto_remember_user_message.py:
+Same queue mechanism as auto_remember_user_message.py (v0.3.0 architecture):
 - Read transcript_path from stdin (JSON)
 - Extract the last assistant message
 - Append to ~/.claude/cognee_pending_remembers.jsonl
-- A separate flusher process drains the queue and calls `remember`
+- A batch processor scheduled via Claude Code's built-in scheduler
+  (loop / CronCreate) runs in the same Claude Code session and calls
+  `mcp__cognee__remember` against the existing MCP cognee server
+  (no new cognee-mcp process is spawned).
+  This avoids BUG-008 (Ladybug DB lock contention).
 
 Input: JSON on stdin: {"transcript_path": "...", "session_id": "..."}
 Output: exit 0 (always allowed; failure to record must never block turn end)
