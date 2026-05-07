@@ -14,7 +14,7 @@ How it works (v0.3.0 architecture):
   `mcp__cognee__remember` against the existing MCP cognee server
   (no new cognee-mcp process is spawned).
 
-This design avoids BUG-008 (Ladybug DB lock contention): the cognee-mcp
+This design avoids the Ladybug DB lock contention error (`Could not set lock on file`): the cognee-mcp
 server process count stays at 1 (the one started at Claude Code session
 launch), so concurrent .lbug file lock requests never occur.
 

@@ -18,7 +18,7 @@ Same queue mechanism as auto_remember_user_message.py (v0.3.0 architecture):
   (loop / CronCreate) runs in the same Claude Code session and calls
   `mcp__cognee__remember` against the existing MCP cognee server
   (no new cognee-mcp process is spawned).
-  This avoids BUG-008 (Ladybug DB lock contention).
+  This avoids the Ladybug DB lock contention error (`Could not set lock on file`).
 
 Input: JSON on stdin: {"transcript_path": "...", "session_id": "..."}
 Output: exit 0 (always allowed; failure to record must never block turn end)
