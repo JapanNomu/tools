@@ -1,6 +1,6 @@
 # Claude Code + Cognee Graph Memory System
 
-**Version**: 0.3.0  
+**Version**: 0.3.1  
 **Verified Cognee version**: 1.0.8 (Ladybug DB)
 
 A module that adds graph-based memory to Claude Code. It accumulates work-related memory (rules, lessons learned, design decisions, incident records) across sessions, enabling retrieval in later sessions.
@@ -61,7 +61,7 @@ Test environment: NVIDIA GeForce RTX 4060 Laptop GPU (VRAM 8GB) / RAM 32GB / qwe
   - Workaround: To persist an interaction immediately, use `remember(data="User: ... / Assistant: ...")`
 
 All other tools (`remember`, `search`, `recall`, `cognify`, `improve`, `forget_memory`, etc.) have been verified to work correctly in v0.2.0.
-v0.3.0 addresses BUG-008 (Ladybug DB lock contention) and BUG-009 (silent data loss when `mcp__cognee__remember` returns failure with `is_error=False`). The queue drain has moved from the out-of-process `harness/hooks/cognee_remember_flusher.py` (v0.2.x; removed) to the new in-Claude-Code skill `harness/skills/cognee-queue-flush/SKILL.md`, which calls `mcp__cognee__remember` on the already-running MCP cognee server so that no second `cognee-mcp` process is ever spawned. The new architecture is verified end-to-end by 21 BATCH tests (UT 12 + IT 4 + ET 3 + ST 2), all passing, plus a hands-on V03-SETUP-4 walkthrough recording **zero** lock-contention errors across more than 50 MCP `remember` / `search` / `delete_dataset` calls under the BUG-008 reproduction condition.
+v0.3.0 addresses the Ladybug DB lock contention error (`Could not set lock on file`) and a related silent data loss issue where `mcp__cognee__remember` returned failure with `is_error=False`. The queue drain has moved from the out-of-process `harness/hooks/cognee_remember_flusher.py` (v0.2.x; removed) to the new in-Claude-Code skill `harness/skills/cognee-queue-flush/SKILL.md`, which calls `mcp__cognee__remember` on the already-running MCP cognee server so that no second `cognee-mcp` process is ever spawned. The new architecture is verified end-to-end by 21 BATCH tests (UT 12 + IT 4 + ET 3 + ST 2), all passing, plus a hands-on setup-procedure walkthrough recording **zero** lock-contention errors across more than 50 MCP `remember` / `search` / `delete_dataset` calls under the same reproduction condition as the original report.
 
 ---
 

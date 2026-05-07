@@ -86,7 +86,7 @@ cp -r harness/skills/cognee-queue-flush ~/.claude/skills/
 > `cognee-queue-flush` skill, which runs **inside the existing Claude Code
 > session** and reuses the existing MCP `cognee` server — it does not spawn a
 > new `cognee-mcp` process, which is what avoids the Ladybug DB lock contention
-> reported as BUG-008.
+> error (`Could not set lock on file`).
 
 ### Step 2: Merge ~/.claude/settings.json
 
@@ -123,9 +123,9 @@ Choose one of:
 
 > **Why no OS-level cron in v0.3.0**: an OS-level cron job would spawn a new
 > `cognee-mcp` process every interval, conflicting with the MCP `cognee` server
-> already held by your Claude Code session and triggering BUG-008 (Ladybug DB
-> lock contention). The Claude Code-internal scheduler keeps everything in one
-> process, which is required by design.
+> already held by your Claude Code session and triggering the Ladybug DB lock
+> contention error (`Could not set lock on file`). The Claude Code-internal
+> scheduler keeps everything in one process, which is required by design.
 
 For the same reason, the CLI helpers `src/sample_src/load_sample.py` and
 `src/sample_src/delete_sample.py` must only be run when **Claude Code is not

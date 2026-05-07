@@ -1,6 +1,6 @@
 ---
 name: cognee-queue-flush
-description: Process the Cognee remember queue accumulated by hooks. Use this skill on a schedule (loop / CronCreate) inside Claude Code to drain ~/.claude/cognee_pending_remembers.jsonl by calling mcp__cognee__remember on the existing MCP cognee server (no new process spawn). This avoids BUG-008 (Ladybug DB lock contention).
+description: Process the Cognee remember queue accumulated by hooks. Use this skill on a schedule (loop / CronCreate) inside Claude Code to drain ~/.claude/cognee_pending_remembers.jsonl by calling mcp__cognee__remember on the existing MCP cognee server (no new process spawn). This avoids the Ladybug DB lock contention error (Could not set lock on file).
 ---
 
 # cognee-queue-flush
@@ -14,7 +14,7 @@ Two `auto_remember_*.py` hooks (UserPromptSubmit / Stop) append entries to a que
 - Queue: `~/.claude/cognee_pending_remembers.jsonl`
 - Each line: `{"timestamp": "...", "session_id": "...", "dataset_name": "...", "data": "..."}`
 
-The hooks **only append to the queue**; they never call cognee. Calling cognee from a hook would either delay the AI turn (sync MCP call) or spawn a new cognee-mcp process (BUG-008 lock contention). So a separate batch processor is needed.
+The hooks **only append to the queue**; they never call cognee. Calling cognee from a hook would either delay the AI turn (sync MCP call) or spawn a new cognee-mcp process, which trips the Ladybug DB lock contention error `Could not set lock on file`. So a separate batch processor is needed.
 
 This skill is that batch processor. It runs **inside the current Claude Code session** (under loop / CronCreate scheduling), so it shares the existing MCP cognee server process — no new cognee-mcp is spawned, no lock contention occurs.
 
@@ -97,7 +97,7 @@ Entries beyond the first N (the not-yet-processed ones) stay in the queue untouc
 
 Report the result: `(succeeded_count, failed_count, remaining_in_queue)`. `remaining_in_queue` is the number of entries still in the queue file after Step 5 (failures + unprocessed). If `failed_count > 0`, mention that failed entries are saved in `~/.claude/cognee_failed_remembers.jsonl` for review. If `remaining_in_queue > 0` because of the per-invocation cap, mention that the next scheduled invocation will pick them up.
 
-## Critical design constraints (NF09 compliance)
+## Critical design constraints (no second cognee-mcp process)
 
 - **DO NOT spawn a new `cognee-mcp` process** (e.g. via `fastmcp.StdioTransport` or `subprocess`). The Claude Code session already has a cognee-mcp server running; reuse it via `mcp__cognee__remember`.
 - **DO NOT install a new MCP server with a different `claude mcp add` invocation**. The MCP cognee server is already registered.
@@ -121,5 +121,5 @@ If failed entries pile up in `~/.claude/cognee_failed_remembers.jsonl`, the user
 ## Related
 
 - Hooks: `harness/hooks/auto_remember_completion.py`, `harness/hooks/auto_remember_user_message.py` (queue producers)
-- Architecture rationale: BUG-008 fix_plan in the project documentation
-- Verification: this skill must be tested under the BUG-008 reproduction condition (Claude Code running + concurrent CLI script that spawns its own cognee-mcp). The expected behavior is that this skill succeeds while the spawning CLI script fails. That confirms the architecture is working as designed.
+- Architecture rationale: see the v0.3.0 entry of `CHANGELOG.md`.
+- Verification: this skill is expected to succeed even when a separate CLI script (e.g. `src/sample_src/load_sample.py`) is concurrently spawning its own `cognee-mcp` process — the spawning CLI script will fail with the Ladybug DB lock contention error (`Could not set lock on file`), but this skill, running inside the existing Claude Code session via the shared MCP cognee server, is unaffected.

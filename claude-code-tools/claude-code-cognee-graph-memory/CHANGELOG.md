@@ -5,15 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.1] - 2026-05-07
+
+### Changed
+
+- **Documentation cleanup: removed internal-only identifiers from the distribution.** The v0.3.0 distribution shipped with internal project IDs (BUG-007 / BUG-008 / BUG-009, requirement IDs FR08-* / NF08 / NF09, task IDs V03-*) embedded throughout `README.md`, `docs/SETUP.md`, `docs/GETTING_STARTED.md`, `docs/HARNESS_GUIDE.md`, and `harness/skills/cognee-queue-flush/SKILL.md`. These IDs are only meaningful inside the development project and provide no value to recipients of the distribution. v0.3.1 removes them and rewrites the surrounding sentences so that the user-visible behaviour is described in concrete terms (e.g. "the Ladybug DB lock contention error `Could not set lock on file`" instead of "BUG-008"). One reference into the development project (`Architecture rationale: BUG-008 fix_plan in the project documentation`) was redirected to the v0.3.0 entry of `CHANGELOG.md`. **No code, requirement, design, or test artifact changed.**
+
 ## [0.3.0] - 2026-05-07
 
 ### Fixed
 
-- **BUG-008 — `Could not set lock on file` on Ladybug DB no longer occurs** (reported by **uzuchi** on the v0.2.1 Zenn article).
+- **`Could not set lock on file` on Ladybug DB no longer occurs** (reported by **uzuchi** on the v0.2.1 Zenn article).
   - **Before (v0.2.1)**: a separate OS-level process (`harness/hooks/cognee_remember_flusher.py`, scheduled by `crontab -e` or `nohup ... --daemon`) drained the queue by **spawning its own `cognee-mcp`**. The CLI helpers `src/sample_src/load_sample.py`, `src/sample_src/delete_sample.py`, and `src/knowledge_src/import_knowledge.py` did the same. While Claude Code was open it already held a `cognee-mcp`, so the second spawn hit Ladybug's non-blocking `fcntl(F_SETLK, F_WRLCK)` and failed immediately.
-  - **After (v0.3.0)**: the queue is drained from **inside** the running Claude Code session by the new skill `harness/skills/cognee-queue-flush/SKILL.md`, scheduled by `/loop 5m cognee-queue-flush` (session-scoped) or `CronCreate(cron="*/5 * * * *", prompt="cognee-queue-flush", recurring=true, durable=true)` (persists across restarts via `~/.claude/scheduled_tasks.json`). The skill calls `mcp__cognee__remember` on the **already running** MCP cognee server, so no second `cognee-mcp` is ever created. The CLI helpers must now only be run while Claude Code is **not** running; for the delete case, `mcp__cognee__delete_dataset` from inside Claude Code is provided as a safe alternative. Verified with more than 50 MCP `remember` / `search` / `delete_dataset` calls under the BUG-008 reproduction condition: zero lock-contention errors.
+  - **After (v0.3.0)**: the queue is drained from **inside** the running Claude Code session by the new skill `harness/skills/cognee-queue-flush/SKILL.md`, scheduled by `/loop 5m cognee-queue-flush` (session-scoped) or `CronCreate(cron="*/5 * * * *", prompt="cognee-queue-flush", recurring=true, durable=true)` (persists across restarts via `~/.claude/scheduled_tasks.json`). The skill calls `mcp__cognee__remember` on the **already running** MCP cognee server, so no second `cognee-mcp` is ever created. The CLI helpers must now only be run while Claude Code is **not** running; for the delete case, `mcp__cognee__delete_dataset` from inside Claude Code is provided as a safe alternative. Verified with more than 50 MCP `remember` / `search` / `delete_dataset` calls under the same reproduction condition as the original report: zero lock-contention errors.
 
-- **BUG-009 — `mcp__cognee__remember` failures are no longer silently dropped from the queue.**
+- **`mcp__cognee__remember` failures are no longer silently dropped from the queue.**
   - **Before (v0.2.1)**: cognee-mcp upstream returns failures with `is_error=False` and an `Error:`-prefixed text body. The v0.2.x flusher discarded the return value (commented-out `# result =`), so failed entries were marked as drained and lost.
   - **After (v0.3.0)**: the new skill enforces a 3-tier failure check (`is_error=True` / any `content[*].text` starting with `Error:` / any raised exception). On failure the entry is appended to `~/.claude/cognee_failed_remembers.jsonl` and kept in the queue, so the next firing retries it.
 
@@ -37,11 +43,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Known Issues
 
-- **`save_interaction` is still unavailable** (BUG-007). **cognee-mcp 0.5.4 calls cognee 1.0.8's `add_rule_associations` function with the keyword argument `context=...`, but cognee has already renamed that argument to `ctx=...`, so the call fails with a keyword-argument mismatch.** Use `remember` for immediate persistence of interaction text. Tracked in the upstream cognee-mcp project.
+- **`save_interaction` is still unavailable.** **cognee-mcp 0.5.4 calls cognee 1.0.8's `add_rule_associations` function with the keyword argument `context=...`, but cognee has already renamed that argument to `ctx=...`, so the call fails with a keyword-argument mismatch.** Use `remember` for immediate persistence of interaction text. Tracked in the upstream cognee-mcp project.
 
 ### Special Thanks
 
-- **uzuchi** — for the Zenn comment on v0.2.1 reporting `Could not set lock on file` together with the exact reproduction setup (Windows-native Claude Code → `wsl.exe -d Ubuntu-24.04 -- python3 .../start_cognee_mcp.py` over stdio transport, `shared_ladybug_lock` unset, Redis not running). That report is what made this rework possible. Thank you.
+- **uzuchi** — for the Zenn comment on v0.2.1 reporting `Could not set lock on file` together with the exact reproduction setup (Windows-native Claude Code → `wsl.exe -d Ubuntu-24.04 -- python3 .../start_cognee_mcp.py` over stdio transport, `shared_ladybug_lock` unset, Redis not running). That report is what made the v0.3.0 architectural rework — the lock-contention root fix and the silent-data-loss fix shipped together — possible. Thank you.
 
 ## [0.2.1] - 2026-05-04
 

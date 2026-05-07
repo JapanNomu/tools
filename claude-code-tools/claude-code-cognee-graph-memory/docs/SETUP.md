@@ -134,7 +134,7 @@ The settings registered with `claude mcp add` are **not picked up by Claude Code
 
 The hooks (`auto_remember_user_message.py` / `auto_remember_completion.py`) only append to a queue file (`~/.claude/cognee_pending_remembers.jsonl`). To actually persist the queued entries into Cognee graph memory, the `cognee-queue-flush` skill must run periodically inside the Claude Code session.
 
-**Architecture rationale**: This skill runs in the same Claude Code process ("live in the current process") and reuses the existing MCP cognee server. It does NOT spawn a new cognee-mcp process. This is what avoids BUG-008 (Ladybug DB lock contention).
+**Architecture rationale**: This skill runs in the same Claude Code process ("live in the current process") and reuses the existing MCP cognee server. It does NOT spawn a new cognee-mcp process. This is what avoids the Ladybug DB lock contention error (`Could not set lock on file`).
 
 **Setup**: Inside Claude Code, register the skill on a recurring schedule. Choose one of:
 
@@ -160,7 +160,7 @@ See `docs/HARNESS_GUIDE.md` Step 4 for the full discussion (per-invocation drain
 
 ### 2-5. CLI tools usage constraint (v0.3.0)
 
-The following CLI tools spawn a new `cognee-mcp` process and **must NOT be run while Claude Code is open** (it will trigger BUG-008 lock contention):
+The following CLI tools spawn a new `cognee-mcp` process and **must NOT be run while Claude Code is open** (it will trigger the Ladybug DB lock contention error `Could not set lock on file`):
 
 - `src/sample_src/load_sample.py` (load bundled samples)
 - `src/sample_src/delete_sample.py` (delete sample dataset)

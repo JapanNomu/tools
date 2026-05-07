@@ -57,7 +57,7 @@ The default `config/.env.example` ships with **qwen2.5:14b** (num_ctx=8192). If 
 
 ## Step 1: Verify operation with bundled samples
 
-> ⚠️ **Important (v0.3.0)**: `load_sample.py` spawns a new `cognee-mcp` process. **Run it while Claude Code is NOT running** (otherwise BUG-008 lock contention will trigger). After Step 1 completes, you can launch Claude Code in Step 2.
+> ⚠️ **Important (v0.3.0)**: `load_sample.py` spawns a new `cognee-mcp` process. **Run it while Claude Code is NOT running** (otherwise the Ladybug DB lock contention error `Could not set lock on file` will trigger). After Step 1 completes, you can launch Claude Code in Step 2.
 
 Run the following in your terminal.
 
@@ -80,7 +80,7 @@ Time estimate: 2-5 minutes (includes Ollama graph processing).
 
 When running on a local LLM, the model sometimes returns unstable responses that cause structured-output validation errors. After 5 retries the script may abort with errors such as `InstructorRetryException` or `Field required`. If this happens, clean up and retry:
 
-> ⚠️ **Important (v0.3.0)**: `delete_sample.py` and `load_sample.py` spawn a new `cognee-mcp` process. **Run them only when Claude Code is NOT running** (otherwise BUG-008 lock contention will trigger). If Claude Code is open, exit it first, run the cleanup, then restart Claude Code.
+> ⚠️ **Important (v0.3.0)**: `delete_sample.py` and `load_sample.py` spawn a new `cognee-mcp` process. **Run them only when Claude Code is NOT running** (otherwise the Ladybug DB lock contention error `Could not set lock on file` will trigger). If Claude Code is open, exit it first, run the cleanup, then restart Claude Code.
 
 ```bash
 # Make sure Claude Code is exited first (no `claude` process running)
@@ -204,7 +204,7 @@ Claude will call `mcp__cognee__delete_dataset(dataset_name="sample_knowledge")`.
 
 **Method B: Delete via CLI script** (Claude Code MUST be exited)
 
-> ⚠️ **Important (v0.3.0)**: `delete_sample.py` spawns a new `cognee-mcp` process. **Exit Claude Code first**, otherwise BUG-008 lock contention will trigger.
+> ⚠️ **Important (v0.3.0)**: `delete_sample.py` spawns a new `cognee-mcp` process. **Exit Claude Code first**, otherwise the Ladybug DB lock contention error `Could not set lock on file` will trigger.
 
 ```bash
 # Make sure Claude Code is exited (no `claude` process running)
@@ -239,7 +239,7 @@ Each `.md` under `user_knowledge/` is split by H2 heading and written to `knowle
 
 ### Step 4-4: Ingest the chunks
 
-> ⚠️ **Important (v0.3.0)**: `import_knowledge.py` spawns a new `cognee-mcp` process. **Exit Claude Code first**, otherwise BUG-008 lock contention will trigger. Run the script while Claude Code is NOT running, then relaunch Claude Code afterwards.
+> ⚠️ **Important (v0.3.0)**: `import_knowledge.py` spawns a new `cognee-mcp` process. **Exit Claude Code first**, otherwise the Ladybug DB lock contention error `Could not set lock on file` will trigger. Run the script while Claude Code is NOT running, then relaunch Claude Code afterwards.
 
 ```bash
 # Make sure Claude Code is exited (no `claude` process running)
