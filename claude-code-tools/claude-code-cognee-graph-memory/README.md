@@ -1,7 +1,7 @@
 # Claude Code + Cognee Graph Memory System
 
-**Version**: 0.3.2  
-**Verified Cognee version**: 1.0.8 (Ladybug DB)
+**Version**: 0.3.4  
+**Verified Cognee version**: 1.1.0 (Ladybug DB; v0.3.4 verified end-to-end on 2026-05-18 via SETUP/GETTING_STARTED). Previously verified with 1.0.8 in v0.3.0-v0.3.2.
 
 A module that adds graph-based memory to Claude Code. It accumulates work-related memory (rules, lessons learned, design decisions, incident records) across sessions, enabling retrieval in later sessions.
 
@@ -49,7 +49,7 @@ Ladybug DB (introduced in Cognee 1.0.4) accelerates graph traversal, making qwen
 | `remember` (with synchronous cognify) | avg 92s (range 44-237s) | Includes entity extraction |
 | `cognify` (background processing) | avg 145s (range 99-232s) | For long documents; runs in background to avoid MCP timeout |
 
-Test environment: NVIDIA GeForce RTX 4060 Laptop GPU (VRAM 8GB) / RAM 32GB / qwen2.5:14b (num_ctx=8192) / Cognee 1.0.5 (Ladybug DB) (note: the table above shows v0.2.0 release-time measurements; v0.3.0 has been re-tested with cognee 1.0.8 for the new BATCH suite — the queue-drain test suite for the v0.3.0 in-Claude-Code skill — and all BATCH tests passed)
+Test environment: NVIDIA GeForce RTX 4060 Laptop GPU (VRAM 8GB) / RAM 32GB / qwen2.5:14b (num_ctx=8192) / Cognee 1.0.5 (Ladybug DB) (note: the table above shows v0.2.0 release-time measurements; v0.3.0 has been re-tested with cognee 1.0.8 for the new BATCH suite — the queue-drain test suite for the v0.3.0 in-Claude-Code skill — and all BATCH tests passed. v0.3.4 has been re-tested with cognee 1.1.0 end-to-end via SETUP/GETTING_STARTED on 2026-05-18; speed degraded relative to cognee 1.0.8: search(CHUNKS) ~3.3x slower, recall ~1.3-1.5x slower — see GETTING_STARTED.md for details.)
 
 ---
 

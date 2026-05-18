@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.4] - 2026-05-18
+
+### Changed
+
+- **Verified Cognee version updated from 1.0.8 to 1.1.0.** The SETUP.md and GETTING_STARTED.md procedures were re-verified end-to-end on cognee 1.1.0 — all steps work unchanged, and the experience scenarios A-D (search(CHUNKS) + recall via GRAPH_COMPLETION, 5 runs each) return expected outputs with full content match. **No code, requirement, design, or test artifact changed.** The only distribution-level change is the cognee version reference (`docs/SETUP.md` pinning hint: `cognee[fastembed]==1.0.8` → `==1.1.0`).
+- **Response time measurements added for cognee 1.1.0.** Under the same Ladybug DB environment, cognee 1.1.0 exhibits the following speed degradation vs cognee 1.0.8:
+  - search(CHUNKS): avg 3.2s → avg 10.58s (~3.3x slower)
+  - recall (Q-A equivalent, via GRAPH_COMPLETION): 20-24s → avg 29.89s (~1.3-1.5x slower)
+- **Ladybug DB version is unchanged at 0.16.0** (bundled with cognee 1.0.7/1.0.8/1.1.0). The fundamental constraint behind BUG-008 (Ladybug DB lock contention) remains in cognee 1.1.0, so the in-Claude-Code skill-based queue drain architecture introduced in v0.3.0 is still required.
+- **The Ollama regression (test_llm_connection hits an Ollama URL without `/v1` and fails with 404) is still present in cognee 1.1.0.** The defaults in `config/.env.example` (`LLM_ENDPOINT=http://localhost:11434/v1` + `COGNEE_SKIP_CONNECTION_TEST=true`) continue to apply.
+
 ## [0.3.2] - 2026-05-07
 
 ### Changed

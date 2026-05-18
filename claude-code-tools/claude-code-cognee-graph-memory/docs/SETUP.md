@@ -178,9 +178,9 @@ The following CLI tools spawn a new `cognee-mcp` process and **must NOT be run w
 |------|------|
 | Install method | `pip install cognee-mcp "cognee[fastembed]"` (latest version) |
 | Pinned version file | `src/requirements.txt` (not yet provided; future work) |
-| Verified versions | Cognee 1.0.8, cognee-mcp 0.5.4, ladybug (bundled with cognee 1.0.8); all 21 BATCH tests passing (as of 2026-05-07, v0.3.0) |
-| Pinning specific versions | Use e.g. `pip install "cognee-mcp==0.5.4" "cognee[fastembed]==1.0.8"` |
-| Required when using Ollama | cognee 1.0.7/1.0.8 has a regression where `test_llm_connection` hits an Ollama URL without `/v1` and fails with 404. Set `LLM_ENDPOINT=http://localhost:11434/v1` (the `/v1` is required) and `COGNEE_SKIP_CONNECTION_TEST=true` in `config/.env`. Both are pre-configured in `.env.example`. |
+| Verified versions | Cognee 1.1.0, cognee-mcp 0.5.4, ladybug 0.16.0, fastembed 0.8.0 (v0.3.4, 2026-05-18, all SETUP.md/GETTING_STARTED.md steps verified end-to-end). Cognee 1.0.8 also verified previously (v0.3.0; all 21 BATCH tests passing as of 2026-05-07). |
+| Pinning specific versions | Use e.g. `pip install "cognee-mcp==0.5.4" "cognee[fastembed]==1.1.0"` |
+| Required when using Ollama | cognee 1.0.7/1.0.8/1.1.0 has a regression where `test_llm_connection` hits an Ollama URL without `/v1` and fails with 404. Set `LLM_ENDPOINT=http://localhost:11434/v1` (the `/v1` is required) and `COGNEE_SKIP_CONNECTION_TEST=true` in `config/.env`. Both are pre-configured in `.env.example`. |
 
 ---
 

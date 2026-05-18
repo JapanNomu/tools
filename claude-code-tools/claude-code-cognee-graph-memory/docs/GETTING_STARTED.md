@@ -36,13 +36,13 @@ This distribution's full feature set has been verified in the following environm
 
 - Test environment: GPU **NVIDIA GeForce RTX 4060 Laptop GPU (VRAM 8GB)** / RAM 32GB
 - Test LLM: **qwen2.5:14b** (num_ctx=8192)
-- Verified Cognee version: **1.0.8 (Ladybug DB; updated from 1.0.5 in v0.3.0)**
-- Result: **35/40 success** (measured at v0.2.0 release on cognee 1.0.5) (remember 5/5 ✅, search(CHUNKS) 5/5 ✅, search(GRAPH_COMPLETION) 5/5 ✅, recall 5/5 ✅, cognify 5/5 ✅, improve 5/5 ✅, forget_memory 5/5 ✅, **save_interaction 0/5 ❌** = known limitation, see below). In v0.3.0, all 21 BATCH tests (UT 12 + IT 4 + ET 3 + ST 2) — verifying the new in-Claude-Code queue-drain skill — pass on cognee 1.0.8.
-- Response time (measured on Ladybug DB):
-  - search(CHUNKS): avg 3.2s (deterministic, no LLM)
-  - search(GRAPH_COMPLETION): avg 14.6s (range 12-18s)
-  - recall (Q-A, TEMPORAL routing): 20-24s
-  - recall (Q-B, GRAPH_COMPLETION_COT routing): 154-156s (Chain-of-Thought reasoning)
+- Verified Cognee version: **1.1.0 (Ladybug DB; updated from 1.0.8 in v0.3.4; SETUP/GETTING_STARTED verified end-to-end on 2026-05-18)**. Previously verified with cognee 1.0.8 in v0.3.0-v0.3.2.
+- Result: **35/40 success** (measured at v0.2.0 release on cognee 1.0.5) (remember 5/5 ✅, search(CHUNKS) 5/5 ✅, search(GRAPH_COMPLETION) 5/5 ✅, recall 5/5 ✅, cognify 5/5 ✅, improve 5/5 ✅, forget_memory 5/5 ✅, **save_interaction 0/5 ❌** = known limitation, see below). In v0.3.0, all 21 BATCH tests (UT 12 + IT 4 + ET 3 + ST 2) — verifying the new in-Claude-Code queue-drain skill — pass on cognee 1.0.8. In v0.3.4, all SETUP/GETTING_STARTED steps and the experience scenarios A-D (search/recall, 5 runs each) pass on cognee 1.1.0 with expected outputs.
+- Response time (cognee 1.0.8 vs 1.1.0 comparison, both measured on Ladybug DB):
+  - search(CHUNKS): cognee 1.0.8 avg **3.2s** / cognee 1.1.0 avg **10.58s** (5-run avg, ~3.3x slower) (deterministic, no LLM)
+  - search(GRAPH_COMPLETION): cognee 1.0.8 avg 14.6s (range 12-18s) / cognee 1.1.0 not measured
+  - recall (Q-A, TEMPORAL routing): cognee 1.0.8 20-24s / cognee 1.1.0 (via GRAPH_COMPLETION) avg **29.89s** (5-run avg, ~1.3-1.5x slower)
+  - recall (Q-B, GRAPH_COMPLETION_COT routing): cognee 1.0.8 154-156s (Chain-of-Thought reasoning) / cognee 1.1.0 not measured
   - improve / forget_memory: all immediate (under a few seconds)
 
 **Ladybug DB (introduced in Cognee 1.0.4) accelerates graph traversal**, making GRAPH_COMPLETION and recall practically usable even with qwen2.5:14b (significant subjective improvement over the v0.1.x KuzuDB environment).
